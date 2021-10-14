@@ -1,6 +1,6 @@
 #!/bin/bash
 
-set -e -u
+set -e -u -o pipefail
 
 say() {
     echo $1
@@ -18,10 +18,20 @@ line_separator() {
     say "\n========================================\n"
 }
 
+
+
 benchmark() {
+    local scale_factor=$1
+
     line_separator
 
-    log "Scale factor: $1 Gb"
+    log "Scale factor: $scale_factor Gb"
+
+    log "Changing directory"
+    cd ~/Masters/ULB/Data\ Warehouse/tpcds-kit/tools
+
+
+    cd - > /dev/null
 }
 
 #--------------------
