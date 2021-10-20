@@ -18,8 +18,6 @@ line_separator() {
     say "\n========================================\n"
 }
 
-
-
 benchmark() {
     local scale_factor=$1
 
