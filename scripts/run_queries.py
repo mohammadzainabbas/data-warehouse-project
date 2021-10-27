@@ -16,7 +16,7 @@ from pyspark.sql import SparkSession
 #------------------------
 def log_message(*args, **kwargs):
     # redirect stdout to a file
-    with open(log_file, 'a') as f:
+    with open(kwargs.log_file, 'a') as f:
         with redirect_stdout(f):
             print(*args, **kwargs)
 
