@@ -41,6 +41,9 @@ for index, table in enumerate(tables):
     df_dict[table] = df
     df.createOrReplaceTempView("{}".format( table ))
 
+# @todo: Save the queries result in results_1gb/result_1.txt -> Query No. 1's result with 1 Gb scale.
+# 
+
 log_message("Took {} seconds to load {} tables with schemas.".format(time() - start_time, len(list(df_dict.keys())) ))
 start_time = time()
 spark.stop()
