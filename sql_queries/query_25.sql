@@ -1,17 +1,17 @@
 
 -- start query 25 in stream 0 using template query16.tpl
 select
-count(distinct cs_order_number) as "order count"
-,sum(cs_ext_ship_cost) as "total shipping cost"
-,sum(cs_net_profit) as "total net profit"
+count(distinct cs_order_number) as OrderCount
+,sum(cs_ext_ship_cost) as TotalShippingCost
+,sum(cs_net_profit) as TotalNetProfit
 from
 catalog_sales cs1
 ,date_dim
 ,customer_address
 ,call_center
 where
-d_date between '1999-5-01' and
-(cast('1999-5-01' as date) + 60 days)
+d_date between cast('1999-5-01' as date) and
+(cast('1999-5-01' as date) + INTERVAL 60 day)
 and cs1.cs_ship_date_sk = d_date_sk
 and cs1.cs_ship_addr_sk = ca_address_sk
 and ca_state = 'ID'

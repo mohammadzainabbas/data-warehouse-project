@@ -9,7 +9,7 @@ date_dim,
 store
 where ss_sold_date_sk = d_date_sk
 and d_date between cast('2001-08-11' as date)
-and (cast('2001-08-11' as date) +  30 days)
+and (cast('2001-08-11' as date) + interval 30 day)
 and ss_store_sk = s_store_sk
 group by s_store_sk)
 ,
@@ -22,7 +22,7 @@ date_dim,
 store
 where sr_returned_date_sk = d_date_sk
 and d_date between cast('2001-08-11' as date)
-and (cast('2001-08-11' as date) +  30 days)
+and (cast('2001-08-11' as date) + interval 30 day)
 and sr_store_sk = s_store_sk
 group by s_store_sk),
 cs as
@@ -33,7 +33,7 @@ from catalog_sales,
 date_dim
 where cs_sold_date_sk = d_date_sk
 and d_date between cast('2001-08-11' as date)
-and (cast('2001-08-11' as date) +  30 days)
+and (cast('2001-08-11' as date) + interval 30 day)
 group by cs_call_center_sk
 ),
 cr as
@@ -44,7 +44,7 @@ from catalog_returns,
 date_dim
 where cr_returned_date_sk = d_date_sk
 and d_date between cast('2001-08-11' as date)
-and (cast('2001-08-11' as date) +  30 days)
+and (cast('2001-08-11' as date) + interval 30 day)
 group by cr_call_center_sk
 ),
 ws as
@@ -56,7 +56,7 @@ date_dim,
 web_page
 where ws_sold_date_sk = d_date_sk
 and d_date between cast('2001-08-11' as date)
-and (cast('2001-08-11' as date) +  30 days)
+and (cast('2001-08-11' as date) + interval 30 day)
 and ws_web_page_sk = wp_web_page_sk
 group by wp_web_page_sk),
 wr as
@@ -68,7 +68,7 @@ date_dim,
 web_page
 where wr_returned_date_sk = d_date_sk
 and d_date between cast('2001-08-11' as date)
-and (cast('2001-08-11' as date) +  30 days)
+and (cast('2001-08-11' as date) + interval 30 day)
 and wr_web_page_sk = wp_web_page_sk
 group by wp_web_page_sk)
 select  channel

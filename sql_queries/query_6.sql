@@ -1,4 +1,3 @@
-
 -- start query 6 in stream 0 using template query80.tpl
 with ssr as
 (select  s_store_id as store_id,
@@ -13,7 +12,7 @@ item,
 promotion
 where ss_sold_date_sk = d_date_sk
 and d_date between cast('2002-08-04' as date)
-and (cast('2002-08-04' as date) +  30 days)
+and (cast('2002-08-04' as date) +  INTERVAL 30 days)
 and ss_store_sk = s_store_sk
 and ss_item_sk = i_item_sk
 and i_current_price > 50
@@ -34,7 +33,7 @@ item,
 promotion
 where cs_sold_date_sk = d_date_sk
 and d_date between cast('2002-08-04' as date)
-and (cast('2002-08-04' as date) +  30 days)
+and (cast('2002-08-04' as date) +  INTERVAL 30 days)
 and cs_catalog_page_sk = cp_catalog_page_sk
 and cs_item_sk = i_item_sk
 and i_current_price > 50
@@ -55,7 +54,7 @@ item,
 promotion
 where ws_sold_date_sk = d_date_sk
 and d_date between cast('2002-08-04' as date)
-and (cast('2002-08-04' as date) +  30 days)
+and (cast('2002-08-04' as date) + INTERVAL 30 days)
 and ws_web_site_sk = web_site_sk
 and ws_item_sk = i_item_sk
 and i_current_price > 50

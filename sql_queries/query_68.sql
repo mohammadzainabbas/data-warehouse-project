@@ -49,7 +49,7 @@ and ws_sold_date_sk = d_date_sk
 and ws_item_sk in (select item_sk from frequent_ss_items)
 and ws_bill_customer_sk in (select c_customer_sk from best_ss_customer))
 limit 100;
-with frequent_ss_items as
+with frequent_ss_items_copy as
 (select substr(i_item_desc,1,30) itemdesc,i_item_sk item_sk,d_date solddate,count(*) cnt
 from store_sales
 ,date_dim
@@ -86,7 +86,7 @@ from catalog_sales
 where d_year = 2000
 and d_moy = 3
 and cs_sold_date_sk = d_date_sk
-and cs_item_sk in (select item_sk from frequent_ss_items)
+and cs_item_sk in (select item_sk from frequent_ss_items_copy)
 and cs_bill_customer_sk in (select c_customer_sk from best_ss_customer)
 and cs_bill_customer_sk = c_customer_sk
 group by c_last_name,c_first_name
@@ -98,7 +98,7 @@ from web_sales
 where d_year = 2000
 and d_moy = 3
 and ws_sold_date_sk = d_date_sk
-and ws_item_sk in (select item_sk from frequent_ss_items)
+and ws_item_sk in (select item_sk from frequent_ss_items_copy)
 and ws_bill_customer_sk in (select c_customer_sk from best_ss_customer)
 and ws_bill_customer_sk = c_customer_sk
 group by c_last_name,c_first_name)
