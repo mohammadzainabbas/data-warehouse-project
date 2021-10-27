@@ -7,8 +7,8 @@ from contextlib import redirect_stdout
 from pickle import load
 from argparse import ArgumentParser
 from sys import argv
+import pandas as pd
 from pyspark.sql import SparkSession
-import pandas as pd 
 
 #spark-submit --jars ~/Downloads/mysql-connector-java-8.0.26/mysql-connector-java-8.0.26.jar scripts/run_queries.py
 
@@ -24,6 +24,7 @@ def log_message(*args, **kwargs):
 def fatal_error(text):
     print("\nError: {}\n".format(text))
     exit(0)
+
 #------------------------
 #------------------------
 def load_schema(schema_file):
