@@ -36,8 +36,8 @@ Examples:
     $ $progname -s 1
     ⚐ → Generates queries for 1 Gb scale.
 
-    $ $progname -s 5 -d oracle -p tpcds-kit
-    ⚐ → Generates queries for 5 Gb scale using 'oracle' as dialect and by running 'tpcds-kit/tools/dsqgen' binary.
+    $ $progname -s 5 -d oracle -p ../tpcds-kit/
+    ⚐ → Generates queries for 5 Gb scale using 'oracle' as dialect and by running '../tpcds-kit/tools/dsqgen' binary.
 
 HEREDOC
 }
