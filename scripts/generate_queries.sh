@@ -81,7 +81,11 @@ if [ ! -d $path/tools ]; then
     exit 1
 fi
 
-# @todo: Check if 'dsqgen' binary exists
+# If $path/tools/dsqgen binary doesn't exist
+if [ ! -x $path/tools/dsqgen ]; then
+    echo "Error: Binary '$path/tools/dsqgen' not found."
+    exit 1
+fi
 
 parent_dir="$(basename $(pwd))"
 output_dir="queries_${scale}gb"
@@ -114,34 +118,3 @@ do
     mv $output_dir/query_0.sql $output_dir/query_$query_no.sql
     log "⚐ → query_$query_no.sql done."
 done
-
-# #Sub-path for alphas (in your sampled directory)
-# path_sufix=term_samples/alphas
-# #Current path for your alpha
-# path_alpha=$(pwd)
-# #Sampled directory (which was created)
-# directory=0
-# #First Alpha file for comparison
-# alpha_1=0
-# #Second Alpha file for comparison
-# alpha_2=0
-# #Check to show header file
-# header=0
-# #Check to show source file
-# code=0
-
-
-# echo "Bash version ${BASH_VERSION}..."
-
-
-# cd bm-tpcds
-
-# set -e  # Exit script on error
-
-# for i in {1..99}
-# do
-#     $path/dsqgen -directory query_templates -template query$i.tpl -VERBOSE Y -SCALE $DATA_SCALE -DIALECT netezza -OUTPUT_DIR $OUTPUT_DIR/
-#     mv "$OUTPUT_DIR/query_0.sql" "$OUTPUT_DIR/query$i.sql"
-#     echo "Done Query: $i"
-# done
-
