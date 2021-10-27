@@ -63,7 +63,16 @@ def run_benchmark(spark, df_dict):
     '''
     Runs the benchmark and return the timings df
     '''
+
+    #--------- Configuration(s) -------------
+    take_avg_run, skip_run = 5, 1
+    total_runs = take_avg_run + skip_run
+    #----------------------------------------
+
+    
+
     # @todo: Save the queries result in results_1gb/result_1.txt -> Query No. 1's result with 1 Gb scale.
+
 
 def save_benchmark(benchmark_dict, benchmark_file):
     '''
@@ -94,16 +103,18 @@ def main(scale):
 
     spark = SparkSession.builder.master("local[1]").appName("TPC DS").enableHiveSupport().getOrCreate()
     schema_dict = load_schema(schema_file)
+    print("Schema Dict: {}".format(schema_dict.keys()))
     df_dict = load_data(spark, schema_dict, data_dir)
-    benchmark_dict = run_benchmark(spark, df_dict, queries_dir, result_dir, log_file, error_file)
-    save_benchmark(benchmark_dict, benchmark_file)
+    print("df keys: {}".format(df_dict.keys()))
+    # benchmark_dict = run_benchmark(spark, df_dict, queries_dir, result_dir, log_file, error_file)
+    # save_benchmark(benchmark_dict, benchmark_file)
 
     spark.stop()
 
 if __name__ == "__main__":
     basename = argv[0] if len(argv) else "run_queries.py"
     parser = ArgumentParser("{} runs your TPC-DS queries for Spark SQL".format(basename))
-    parser.add_argument("-s", "-scale", help="Scale factor for your tpc queries.", type=int)
+    parser.add_argument("-scale", help="Scale factor for your tpc queries.", type=int)
     args = parser.parse_args()
     main(scale=args.scale)
 
