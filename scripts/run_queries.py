@@ -1,5 +1,5 @@
-from os import getcwd, listdir, environ
-from os.path import join, isfile, abspath, pardir
+from os import getcwd, listdir
+from os.path import join, isfile, abspath, pardir, exists
 from time import time
 from shutil import copyfile
 from sys import stdout, stderr, __stdout__, __stderr__
@@ -40,13 +40,23 @@ def load_data(spark, schema_dict, data_dir):
     '''
     Load the data and create a temp view for each data 
     '''
-    # @todo: check if data_dir has .csv files -> if not fatal error
+    # check if data_dir has .csv files -> if not fatal error
+    if not exists(data_dir): fatal_error("Data directory '{}' not found".format(data_dir))
+
+    # get all *.csv files in data_dir
+    data_files = [str(x).replace(".csv", "") for x in listdir(data_dir) if x.endswith(".csv") and isfile(join(data_dir, x))]
+    if not len(data_files): fatal_error("No .csv file found in data directory '{}'".format(data_dir))
+    
+    # get common tables names b/w *.csv and schema
+    tables = list(set(data_files).intersection(set(list(schema_dict.keys()))))
+    if not len(tables): fatal_error("No schema was found for any .csv file in data directory '{}'".format(data_dir))
 
     df_dict = {}
-    for table in list(schema_dict.keys()):
+    for table in tables:
         df = spark.read.load( join(data_dir, "{}.csv".format( table )), format="csv", delimiter="|", header="true", schema=schema_dict[table])
         df_dict[table] = df
         df.createOrReplaceTempView("{}".format( table ))
+
     return df_dict
 
 def run_benchmark(spark, df_dict):
