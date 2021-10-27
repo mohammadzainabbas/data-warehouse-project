@@ -1,4 +1,4 @@
-from os import getcwd, listdir
+from os import getcwd, listdir, makedirs
 from os.path import join, isfile, abspath, pardir, exists
 from time import time
 from shutil import copyfile
@@ -8,6 +8,7 @@ from pickle import load
 from argparse import ArgumentParser
 from sys import argv, stdout, stderr, __stdout__, __stderr__
 import pandas as pd
+import re
 from pyspark.sql import SparkSession
 
 #spark-submit --jars ~/Downloads/mysql-connector-java-8.0.26/mysql-connector-java-8.0.26.jar scripts/run_queries.py
@@ -31,6 +32,9 @@ def fatal_error(text):
     print("\nError: {}\n".format(text))
     exit(0)
 
+def create_if_not_exist(dir):
+    if not exists(dir): makedirs(dir)
+    return dir
 #------------------------
 #------------------------
 def load_schema(schema_file):
@@ -57,15 +61,11 @@ def load_data(spark, schema_dict, data_dir):
     tables = list(set(data_files).intersection(set(list(schema_dict.keys()))))
     if not len(tables): fatal_error("No schema was found for any .csv file in data directory '{}'".format(data_dir))
 
-    df_dict = {}
     for table in tables:
         df = spark.read.load( join(data_dir, "{}.csv".format( table )), format="csv", delimiter="|", header="true", schema=schema_dict[table])
-        df_dict[table] = df
         df.createOrReplaceTempView("{}".format( table ))
 
-    return df_dict
-
-def run_benchmark(spark, df_dict, queries_dir, result_dir, log_file, error_file):
+def run_benchmark(spark, queries_dir, result_dir, log_file, error_file):
     '''
     Runs the benchmark and return the timings df
     '''
@@ -73,6 +73,9 @@ def run_benchmark(spark, df_dict, queries_dir, result_dir, log_file, error_file)
     take_avg_run, skip_run = 5, 1
     total_runs = take_avg_run + skip_run
     queries = [x for x in listdir(queries_dir) if str(x).endswith(".sql") and isfile(join(queries_dir, x))]
+
+    digit_regex = re.compile(r"(?P<num>\d+)")
+    timings_dict = {}
 
     log_message = lambda x: print_log(log_file, x)
     log_error = lambda x: print_error(error_file, x)
@@ -91,27 +94,25 @@ def run_benchmark(spark, df_dict, queries_dir, result_dir, log_file, error_file)
             except Exception as e:
                 log_error("[[ error ]]: Failed to execute '{}' query due to:\n{}".format( file, e ))
                 return None, None
-
-    timings_dict = {}
+    
     for index, query in enumerate(queries):
-        print("="*50)
-        print("{} - Running benchmark for query: {}".format(index + 1, query))
+        log_message("="*50)
+        log_message("{} - Running benchmark for query: {}".format(index + 1, query))
 
         timings = list()
         query_file = join(queries_dir, query)
+        query_no = int(digit_regex.findall(query)[0]) if len(digit_regex.findall(query)) else ""
 
         for run in list(range(0, total_runs)):
-            executed_time = get_execute_query_time(query_file, debug)
-            if executed_time is None: continue
-            if run == 0:
-                print("Skipping 1st run")
-            else:
+            is_first = run == 0
+            executed_time, result = get_execute_query_time(query_file, is_first=is_first)
+            if executed_time is None and result is None: continue # in case of some error
+            elif result is not None: result.toPandas().to_csv(join(result_dir, "result_{}.csv".format(query_no)), sep="|") # save the result after 1st run
+            else: # add to benchmark's timings
                 timings.append(executed_time)
-                print("{} run took {} secs".format(run, executed_time))
+                log_message("{} run took {} secs".format(run, executed_time))
         timings_dict[query] = timings
- 
-    # @todo: Save the queries result in results_1gb/result_1.txt -> Query No. 1's result with 1 Gb scale.
-
+    return timings_dict
 
 def save_benchmark(benchmark_dict, benchmark_file):
     '''
@@ -131,22 +132,21 @@ def main(scale):
     # data_dir = join(abspath(join(getcwd(), pardir)), "tpcds-kit", "data_correct") # ../tpcds-kit/data_correct
     project_dir = join(getcwd())
     data_dir = join(project_dir, "data_{}gb".format(scale)) # data_1gb -> path for data for e.g: data_1gb/*.csv 
-    result_dir = join(project_dir, "results_dir", "results_{}gb".format(scale)) # results_dir/results_1gb
+    result_dir = join(create_if_not_exist(join(project_dir, "results_dir", "results_{}gb".format(scale)))) # results_dir/results_1gb
     queries_dir = join(project_dir, "queries_{}gb".format(scale)) # queries_1gb
 
-    log_file = join(project_dir, "tpcds_logs", "tpcds_{}gb.log".format(scale)) # tpcds_logs/tpcds_1gb.log
-    error_file = join(project_dir, "tpcds_errors", "tpcds_{}gb.err".format(scale)) # tpcds_errors/tpcds_1gb.err
-    schema_file = join(project_dir, "schema", "tpcds_schema.pickle")
-    benchmark_file = join(project_dir, "benchmark", "benchmark_timings_{}gb.csv".format(scale))
+    log_file = join(create_if_not_exist(join(project_dir, "tpcds_logs")), "tpcds_{}gb.log".format(scale)) # tpcds_logs/tpcds_1gb.log
+    error_file = join(create_if_not_exist(join(project_dir, "tpcds_errors")), "tpcds_{}gb.err".format(scale)) # tpcds_errors/tpcds_1gb.err
+    schema_file = join(create_if_not_exist(join(project_dir, "schema")), "tpcds_schema.pickle")
+    benchmark_file = join(create_if_not_exist(join(project_dir, "benchmark")), "benchmark_timings_{}gb.csv".format(scale))
 #=======
 
     spark = SparkSession.builder.master("local[1]").appName("TPC DS").enableHiveSupport().getOrCreate()
     schema_dict = load_schema(schema_file)
     print("Schema Dict: {}".format(schema_dict.keys()))
-    df_dict = load_data(spark, schema_dict, data_dir)
-    print("df keys: {}".format(df_dict.keys()))
-    benchmark_dict = run_benchmark(spark, df_dict, queries_dir, result_dir, log_file, error_file)
-    # save_benchmark(benchmark_dict, benchmark_file)
+    load_data(spark, schema_dict, data_dir)
+    benchmark_dict = run_benchmark(spark, queries_dir, result_dir, log_file, error_file)
+    save_benchmark(benchmark_dict, benchmark_file)
 
     spark.stop()
 
