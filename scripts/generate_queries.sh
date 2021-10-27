@@ -27,7 +27,6 @@ Usage:
 Options:
 
     -s, --scale             Scale in Gb. (required)
-    -o, --output_path       Path to where queries will be saved. (required)
     -p, --path              Path for tools 'dsqgen' binary. (by default consider 'dsqgen' binary in your current directory)
     -d, --dialect           Dialect to use. (by default uses 'netezza')
     -h, --help              Show usage
@@ -59,7 +58,6 @@ dialect='netezza'
 while [[ "$#" -gt 0 ]]; do
     case $1 in
         -s|--scale) scale="$2"; shift ;;
-        -o|--output_path) output_path="$2"; shift ;;
         -p|--path) path="$2"; shift ;;
         -d|--dialect) dialect="$2"; shift ;;
         -h|--help)
@@ -85,14 +83,18 @@ fi
 
 # @todo: Check if 'dsqgen' binary exists
 
-# If output_path directory doesn't exist
-if [ ! -d $output_path ]; then
-    echo "Directory '$output_path' not found. Creating $output_path now"
-    mkdir -p $output_path
+parent_dir="$(basename $(pwd))"
+output_dir="queries_${scale}gb"
+output_path="$parent_dir/$output_dir"
+
+# If output_dir directory doesn't exist
+if [ ! -d $output_dir ]; then
+    echo "Directory '$output_dir' not found. Creating $output_dir now"
+    mkdir -p $output_dir
 fi
 
 # Delete everything in the output directory
-rm -rf $output_path/*
+rm -rf $output_dir/*
 
 # template file do we have
 template_files=$path/query_templates/templates.lst
@@ -103,14 +105,13 @@ if [ ! -f $template_files ]; then
     exit 1
 fi
 
-
 for template in `less $template_files`
 do
-    cd $path/tools
-    ./dsqgen -directory ../query_templates -template $template -scale $scale -dialect $dialect -output_dir $output_path
-    cd -
+    cd $path/tools > /dev/null
+    ./dsqgen -directory ../query_templates -template $template -scale $scale -dialect $dialect -output_dir ../../$output_path > /dev/null 2>> ${progname}_error.log
+    cd - > /dev/null
     query_no=$(echo $template | sed 's/[a-z]*//g' | sed 's/\.//g')
-    mv "$output_path/query_0.sql" "$output_path/query_$query_no.sql"
+    mv $output_dir/query_0.sql $output_dir/query_$query_no.sql
     log "⚐ → query_$query_no.sql done."
 done
 
