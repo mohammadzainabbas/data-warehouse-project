@@ -3,10 +3,10 @@ from os.path import join, isfile, abspath, pardir, exists
 from time import time
 from shutil import copyfile
 from sys import stdout, stderr, __stdout__, __stderr__
-from contextlib import redirect_stdout
+from contextlib import redirect_stdout, redirect_stderr
 from pickle import load
 from argparse import ArgumentParser
-from sys import argv
+from sys import argv, stdout, stderr, __stdout__, __stderr__
 import pandas as pd
 from pyspark.sql import SparkSession
 
@@ -15,10 +15,16 @@ from pyspark.sql import SparkSession
 #------------------------
 # Helper functions
 #------------------------
-def log_message(*args, **kwargs):
+def print_log(log_file, *args, **kwargs):
     # redirect stdout to a file
-    with open(kwargs.log_file, 'a') as f:
+    with open(log_file, 'a') as f:
         with redirect_stdout(f):
+            print(*args, **kwargs)
+
+def print_error(error_file, *args, **kwargs):
+    # redirect stderr to a file
+    with open(error_file, 'a') as f:
+        with redirect_stderr(f):
             print(*args, **kwargs)
 
 def fatal_error(text):
@@ -59,18 +65,51 @@ def load_data(spark, schema_dict, data_dir):
 
     return df_dict
 
-def run_benchmark(spark, df_dict):
+def run_benchmark(spark, df_dict, queries_dir, result_dir, log_file, error_file):
     '''
     Runs the benchmark and return the timings df
     '''
-
     #--------- Configuration(s) -------------
     take_avg_run, skip_run = 5, 1
     total_runs = take_avg_run + skip_run
+    queries = [x for x in listdir(queries_dir) if str(x).endswith(".sql") and isfile(join(queries_dir, x))]
+
+    log_message = lambda x: print_log(log_file, x)
+    log_error = lambda x: print_error(error_file, x)
     #----------------------------------------
+    def get_execute_query_time(file, is_first=False):
+        with open(file, "rt") as f:
+            try:
+                if is_first:
+                    start_time = time()
+                    result = spark.sql(f.read())
+                    return time() - start_time, result
+                else:
+                    start_time = time()
+                    spark.sql(f.read())
+                    return time() - start_time, None
+            except Exception as e:
+                log_error("[[ error ]]: Failed to execute '{}' query due to:\n{}".format( file, e ))
+                return None, None
 
-    
+    timings_dict = {}
+    for index, query in enumerate(queries):
+        print("="*50)
+        print("{} - Running benchmark for query: {}".format(index + 1, query))
 
+        timings = list()
+        query_file = join(queries_dir, query)
+
+        for run in list(range(0, total_runs)):
+            executed_time = get_execute_query_time(query_file, debug)
+            if executed_time is None: continue
+            if run == 0:
+                print("Skipping 1st run")
+            else:
+                timings.append(executed_time)
+                print("{} run took {} secs".format(run, executed_time))
+        timings_dict[query] = timings
+ 
     # @todo: Save the queries result in results_1gb/result_1.txt -> Query No. 1's result with 1 Gb scale.
 
 
@@ -106,7 +145,7 @@ def main(scale):
     print("Schema Dict: {}".format(schema_dict.keys()))
     df_dict = load_data(spark, schema_dict, data_dir)
     print("df keys: {}".format(df_dict.keys()))
-    # benchmark_dict = run_benchmark(spark, df_dict, queries_dir, result_dir, log_file, error_file)
+    benchmark_dict = run_benchmark(spark, df_dict, queries_dir, result_dir, log_file, error_file)
     # save_benchmark(benchmark_dict, benchmark_file)
 
     spark.stop()
