@@ -8,6 +8,7 @@ from pickle import load
 from argparse import ArgumentParser
 from sys import argv
 from pyspark.sql import SparkSession
+import pandas as pd 
 
 #spark-submit --jars ~/Downloads/mysql-connector-java-8.0.26/mysql-connector-java-8.0.26.jar scripts/run_queries.py
 
@@ -53,6 +54,13 @@ def run_benchmark(spark, df_dict):
     '''
     # @todo: Save the queries result in results_1gb/result_1.txt -> Query No. 1's result with 1 Gb scale.
 
+def save_benchmark(benchmark_dict, benchmark_file):
+    '''
+    Save the benchmark result as 'benchmark_timings_1gb.csv'
+    '''
+    benchmark_df = pd.DataFrame(benchmark_dict)
+    benchmark_df.to_csv(benchmark_file)
+
 def main(scale):
     
     if not isinstance(scale, int): fatal_error("'scale' should be an int.")
@@ -70,14 +78,14 @@ def main(scale):
     log_file = join(project_dir, "tpcds_logs", "tpcds_{}gb.log".format(scale)) # tpcds_logs/tpcds_1gb.log
     error_file = join(project_dir, "tpcds_errors", "tpcds_{}gb.err".format(scale)) # tpcds_errors/tpcds_1gb.err
     schema_file = join(project_dir, "schema", "tpcds_schema.pickle")
+    benchmark_file = join(project_dir, "benchmark", "benchmark_timings_{}gb.csv".format(scale))
 #=======
 
     spark = SparkSession.builder.master("local[1]").appName("TPC DS").enableHiveSupport().getOrCreate()
     schema_dict = load_schema(schema_file)
     df_dict = load_data(spark, schema_dict, data_dir)
-    benchmark_df = run_benchmark(spark, df_dict, queries_dir, result_dir, log_file, error_file)
-
-    # @todo: Save the benchmark df as 'benchmark_timings_1gb.csv'
+    benchmark_dict = run_benchmark(spark, df_dict, queries_dir, result_dir, log_file, error_file)
+    save_benchmark(benchmark_dict, benchmark_file)
 
     spark.stop()
 
