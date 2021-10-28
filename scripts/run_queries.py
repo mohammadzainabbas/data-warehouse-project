@@ -4,11 +4,12 @@ from time import time
 from shutil import copyfile
 from sys import stdout, stderr, __stdout__, __stderr__
 from contextlib import redirect_stdout, redirect_stderr
-from pickle import load
+from pickle import load, dump, HIGHEST_PROTOCOL
 from argparse import ArgumentParser
 from sys import argv, stdout, stderr, __stdout__, __stderr__
 import pandas as pd
 import re
+from collections import OrderedDict
 from pyspark.sql import SparkSession
 
 #spark-submit --jars ~/Downloads/mysql-connector-java-8.0.26/mysql-connector-java-8.0.26.jar scripts/run_queries.py
@@ -120,12 +121,34 @@ def run_benchmark(spark, queries_dir, result_dir, log_file, error_file):
         return timings_dict
 
 
-def save_benchmark(benchmark_dict, benchmark_file):
+def save_benchmark(benchmark_dict, benchmark_dir, scale):
     '''
-    Save the benchmark result as 'benchmark_timings_1gb.csv'
+    Save the benchmark result as 'benchmark_timings_1gb.csv' (contains avg. timings) & 'benchmark_timings_1gb.pickle' (contains whole benchmark_dict)
     '''
-    benchmark_df = pd.DataFrame(benchmark_dict)
-    benchmark_df.to_csv(benchmark_file)
+    benchmark_dict_file = join(benchmark_dir, "benchmark_timings_{}gb.pickle".format(scale))
+    benchmark_file = join(benchmark_dir, "benchmark_timings_{}gb.csv".format(scale))
+    
+    # save whole 'benchmark_dict' as pickle file
+    with open(benchmark_dict_file, 'wb') as f:
+        dump(benchmark_dict, f, protocol=HIGHEST_PROTOCOL)
+    
+    # calculate avg. timings
+    timings_dict = {}
+    for key, value in benchmark_dict.items():
+        if isinstance(value, list) and len(value):
+            timings_dict[key] = sum(value)/len(value)
+        else:
+            timings_dict[key] = None
+
+    # generate ordered dict
+    benchmark_order_dict = [OrderedDict((
+        ("query", "{}".format( key )),
+        ("scale - {}gb".format(scale), "{}".format( value )),
+        )) for key, value in timings_dict.items()]
+
+    # save it as .csv file
+    benchmark_df = pd.DataFrame(benchmark_order_dict)
+    benchmark_df.to_csv(benchmark_file, sep="|")
 
 def main(scale):
     
@@ -140,11 +163,11 @@ def main(scale):
     data_dir = join(project_dir, "data_{}gb".format(scale)) # data_1gb -> path for data for e.g: data_1gb/*.csv 
     result_dir = join(create_if_not_exist(join(project_dir, "results_dir", "results_{}gb".format(scale)))) # results_dir/results_1gb
     queries_dir = join(project_dir, "queries_{}gb".format(scale)) # queries_1gb
+    benchmark_dir = join(create_if_not_exist(join(project_dir, "benchmark")))
 
     log_file = join(create_if_not_exist(join(project_dir, "tpcds_logs")), "tpcds_{}gb.log".format(scale)) # tpcds_logs/tpcds_1gb.log
     error_file = join(create_if_not_exist(join(project_dir, "tpcds_errors")), "tpcds_{}gb.err".format(scale)) # tpcds_errors/tpcds_1gb.err
     schema_file = join(create_if_not_exist(join(project_dir, "schema")), "tpcds_schema.pickle")
-    benchmark_file = join(create_if_not_exist(join(project_dir, "benchmark")), "benchmark_timings_{}gb.csv".format(scale))
 #=======
 
     spark = SparkSession.builder.master("local[1]").appName("TPC DS").enableHiveSupport().getOrCreate()
@@ -152,7 +175,7 @@ def main(scale):
     print("Schema Dict: {}".format(schema_dict.keys()))
     load_data(spark, schema_dict, data_dir)
     benchmark_dict = run_benchmark(spark, queries_dir, result_dir, log_file, error_file)
-    save_benchmark(benchmark_dict, benchmark_file)
+    save_benchmark(benchmark_dict, benchmark_dir)
 
     spark.stop()
 
