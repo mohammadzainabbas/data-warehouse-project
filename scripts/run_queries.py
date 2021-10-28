@@ -12,7 +12,7 @@ import re
 from collections import OrderedDict
 from pyspark.sql import SparkSession
 
-#spark-submit --jars ~/Downloads/mysql-connector-java-8.0.26/mysql-connector-java-8.0.26.jar scripts/run_queries.py
+#spark-submit --jars ~/Downloads/mysql-connector-java-8.0.26/mysql-connector-java-8.0.26.jar scripts/run_queries.py -scale 1
 
 #------------------------
 # Helper functions
