@@ -37,9 +37,7 @@ def modify_query(src_file, dest_file):
 def main(queries_dir, save_dir, debug=False):
     sql_queries = [x for x in listdir(queries_dir) if isfile(join(queries_dir, x)) and x.endswith(".sql")]
 
-    if not len(sql_queries):
-        fatal_error("No .sql file in '{}'".format(queries_dir))
-
+    if not len(sql_queries): fatal_error("No .sql file in '{}'".format(queries_dir))
     if not exists(save_dir): makedirs(save_dir)
     
     for query in sql_queries:
