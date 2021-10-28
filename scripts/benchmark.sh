@@ -75,19 +75,24 @@ benchmark() {
     log "Scale factor: $scale Gb"
 
     # 1. Generate data
-    log "Generating data for $scale"
+    separator
+    log "Generating data for $scale Gb"
     sh scripts/generate_data.sh -s $scale -p $path
 
     # 2. Generate queries
-    log "Generating queries for $scale"
+    separator
+    log "Generating queries for $scale Gb"
     sh scripts/generate_queries.sh -s $scale -p $path
 
     # 3. Modify queries
     conda activate $conda_env || error "Unable to activate conda env '$conda_env' "
-    log "Modifying queries for $scale"
+    separator
+    log "Modifying queries for $scale Gb"
     python scripts/modify_queires.py -queries_dir queries_${scale}gb -save_dir queries_${scale}gb
     
     # 4. Benchmark queries
+    separator
+    log "Benchmarking queries for $scale Gb"
     spark-submit scripts/run_queries.py -scale $scale &> spark_${scale}gb.log #  redirect stdout and stderr to the spark_<scale>gb.log
 
     # @todo: make adjustment for modified queries' path -> save in same locations (and save the old versions somewhere else)
