@@ -9,8 +9,8 @@
 # Enable exit on error
 set -e -u -o pipefail
 
-# import helper functions from 'utils.sh'
-source utils.sh
+# import helper functions from 'scripts/utils.sh'
+source $(dirname $0)/utils.sh
 
 #Function that shows usage for this script
 function usage()

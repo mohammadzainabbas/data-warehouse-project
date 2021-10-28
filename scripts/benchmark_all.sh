@@ -9,8 +9,8 @@
 # Enable exit on error
 set -e -u -o pipefail
 
-# import helper functions from 'utils.sh'
-source utils.sh
+# import helper functions from 'scripts/utils.sh'
+source $(dirname $0)/utils.sh
 
 # scale factors to be used
 benchmark_scales=(1 5 10 25 50)
