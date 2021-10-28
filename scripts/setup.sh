@@ -9,8 +9,13 @@
 # Enable exit on error
 set -e -u -o pipefail
 
-# import helper functions from 'scripts/utils.sh'
-source $(dirname $0)/utils.sh
+log () {
+    echo "[[ log ]] $1"
+}
+
+error () {
+    echo "[[ error ]] $1"
+}
 
 #Function that shows usage for this script
 function usage()
@@ -50,18 +55,10 @@ while [[ "$#" -gt 0 ]]; do
     shift
 done
 
-check_install() {
-    if [ ! $(type -p $1) ]; then
-        log "No $1 found"
-    else
-        log "$1 found"
-    fi
-}
-
 install_brew() {
     if [ ! $(type -p brew) ]; then
         error "'brew' not found. Installing it now ..."
-        # /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+        /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
     else
         log "'brew' found ..."
     fi
@@ -70,14 +67,14 @@ install_brew() {
 install_apache_spark() {
     if [ ! $(type -p spark-submit) ]; then
         error "'apache-spark' not found. Installing it now ..."
-        # brew install apache-spark
+        brew install apache-spark
     else
         log "'apache-spark' found ..."
     fi
 }
 
 conda_init() {
-    # conda init --all || error "Unable to conda init ..."
+    conda init --all || error "Unable to conda init ..."
 
     if [[ $SHELL == *"zsh"* ]]; then
         . ~/.zshrc
@@ -91,7 +88,7 @@ conda_init() {
 install_conda() {
     if [ ! $(type -p conda) ]; then
         error "'anaconda' not found. Installing it now ..."
-        # brew install --cask anaconda && conda_init
+        brew install --cask anaconda && conda_init
     else
         log "'anaconda' found ..."
     fi
