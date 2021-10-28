@@ -25,11 +25,16 @@ benchmark() {
 
     log "Scale factor: $scale_factor Gb"
 
-    log "Changing directory"
-    cd ~/Masters/ULB/Data\ Warehouse/tpcds-kit/tools
+    log "Generating data for $scale_factor"
+    sh scripts/generate_data.sh -s $scale_factor -p ../tpcds-kit
+    
+    log "Generating queries for $scale_factor"
+    sh scripts/generate_queries.sh -s $scale_factor -p ../tpcds-kit
 
+    # @todo: make adjustment for modified queries' path -> save in same locations (and save the old versions somewhere else)
 
-    cd - > /dev/null
+    log "Benchmarking for $scale_factor"
+    spark-submit --jars ~/Downloads/mysql-connector-java-8.0.26/mysql-connector-java-8.0.26.jar scripts/run_queries.py -scale $scale_factor
 }
 
 #--------------------
