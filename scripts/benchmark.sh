@@ -93,8 +93,15 @@ benchmark() {
     # 4. Benchmark queries
     separator
     log "Benchmarking queries for $scale Gb"
-    spark-submit scripts/run_queries.py -scale $scale &> spark_${scale}gb.log #  redirect stdout and stderr to the spark_<scale>gb.log
+    
+    start=$(date +%s)
 
+    spark-submit scripts/run_queries.py -scale $scale &> spark_${scale}gb.log #  redirect stdout and stderr to the spark_<scale>gb.log
+    
+    end=$(date +%s)
+    time_took=$((end-start))
+    log "⚑ Benchmarking time for $scale Gb → $time_took seconds ..."
+    
     # @todo: make adjustment for modified queries' path -> save in same locations (and save the old versions somewhere else)
 }
 
