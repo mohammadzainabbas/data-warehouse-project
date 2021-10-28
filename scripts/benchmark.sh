@@ -10,7 +10,7 @@
 set -e -u -o pipefail
 
 # import helper functions from 'utils.sh'
-source utils.sh
+source $(dirname $0)/utils.sh
 
 #Function that shows usage for this script
 function usage()
