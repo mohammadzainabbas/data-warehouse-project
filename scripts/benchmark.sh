@@ -9,28 +9,8 @@
 # Enable exit on error
 set -e -u -o pipefail
 
-log () {
-    echo "[[ log ]] $1"
-}
-
-error () {
-    echo "[[ error ]] $1"
-}
-
-fatal_error () {
-    error "$1"
-    exit 1
-}
-
-check_dir() {
-    if [ ! -d $1 ]; then
-        fatal_error "Directory '$1' not found."
-    fi
-}
-
-line_separator() {
-    echo "\n========================================\n"
-}
+# import helper functions from 'utils.sh'
+source utils.sh
 
 #Function that shows usage for this script
 function usage()
@@ -112,10 +92,6 @@ benchmark() {
 
     # @todo: make adjustment for modified queries' path -> save in same locations (and save the old versions somewhere else)
 }
-
-#--------------------
-# Configurations
-#--------------------
 
 log "Starting Benchmarking Service"
 
