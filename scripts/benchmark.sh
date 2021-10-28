@@ -95,7 +95,7 @@ benchmark() {
 
     end=$(date +%s)
     time_took=$((end-start))
-    log "⚑ Modifying queries' time for $scale Gb → $time_took seconds ..."
+    log "⚑ Modifying queries time for $scale Gb → $time_took seconds ..."
     
     # 4. Benchmark queries
     separator
@@ -109,7 +109,7 @@ benchmark() {
     time_took=$((end-start))
     log "⚑ Benchmarking time for $scale Gb → $time_took seconds ..."
     
-    # @todo: make adjustment for modified queries' path -> save in same locations (and save the old versions somewhere else)
+    # @todo: make adjustment for modified queries path -> save in same locations (and save the old versions somewhere else)
 }
 
 log "Starting Benchmarking Service"
