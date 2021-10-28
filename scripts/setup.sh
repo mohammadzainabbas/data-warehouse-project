@@ -64,6 +64,26 @@ install_brew() {
     fi
 }
 
+install_git() {
+    if [ ! $(type -p git) ]; then
+        error "'git' not found. Installing it now ..."
+        brew install git
+    else
+        log "'git' found ..."
+    fi
+}
+
+setup_tpcds() {
+    
+    git clone https://github.com/gregrahn/tpcds-kit.git ../tpcds-kit
+    
+    cd ../tpcds-kit/tools > /dev/null
+    
+    make OS=MACOS > /dev/null
+
+    cd - > /dev/null
+}
+
 install_apache_spark() {
     if [ ! $(type -p spark-submit) ]; then
         error "'apache-spark' not found. Installing it now ..."
@@ -99,11 +119,15 @@ create_conda_env() {
     conda activate $env_name &> /dev/null || echo "" > /dev/null
 }
 
+
 log "Starting Setup Service"
 
 install_brew
+install_git
+setup_tpcds
 install_apache_spark
 install_conda
 create_conda_env
+
 
 log "All done !!"
