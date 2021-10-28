@@ -88,7 +88,7 @@ benchmark() {
     python scripts/modify_queires.py -queries_dir queries_${scale}gb -save_dir queries_${scale}gb
     
     # 4. Benchmark queries
-    spark-submit scripts/run_queries.py -scale $scale
+    spark-submit scripts/run_queries.py -scale $scale &> spark_${scale}gb.log #  redirect stdout and stderr to the spark_<scale>gb.log
 
     # @todo: make adjustment for modified queries' path -> save in same locations (and save the old versions somewhere else)
 }
