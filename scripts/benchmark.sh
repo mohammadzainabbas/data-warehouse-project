@@ -13,6 +13,21 @@ log () {
     echo "[[ log ]] $1"
 }
 
+error () {
+    echo "[[ error ]] $1"
+}
+
+fatal_error () {
+    error "$1"
+    exit 1
+}
+
+check_dir() {
+    if [ ! -d $1 ]; then
+        fatal_error "Directory '$1' not found."
+    fi
+}
+
 line_separator() {
     echo "\n========================================\n"
 }
@@ -31,7 +46,7 @@ Usage:
 Options:
 
     -s, --scale             Scale in Gb. (by default 1)
-    -p, --path              Path for tpcds directory. (required)
+    -p, --path              Path for tpcds directory. (by default uses '../tpcds-kit')
     -h, --help              Show usage
 
 Examples:
@@ -40,12 +55,14 @@ Examples:
     ⚐ → Benchmark for 1 Gb scale.
 
     $ $progname -s 5 -p ../tpcds-kit/
-    ⚐ → Benchmark for 5 Gb scale with tpcds dir path as '../tpcds-kit'ß.
+    ⚐ → Benchmark for 5 Gb scale with tpcds dir path as '../tpcds-kit'.
 
 HEREDOC
 }
 
+progname=$(basename $0)
 scale=1
+path=../tpcds-kit
 
 #Get all the arguments and update accordingly
 while [[ "$#" -gt 0 ]]; do
@@ -61,23 +78,39 @@ while [[ "$#" -gt 0 ]]; do
     shift
 done
 
+
 benchmark() {
-    local scale_factor=$1
+
+    local scale=$1
+    local path=$2
+    local conda_env=pyspark_env # change this to your conda env
+
+    # sanity checks
+    check_dir $path
+    check_dir $path/tools
+    check_dir $path/query_templates
 
     line_separator
 
-    log "Scale factor: $scale_factor Gb"
+    log "Scale factor: $scale Gb"
 
-    log "Generating data for $scale_factor"
-    sh scripts/generate_data.sh -s $scale_factor -p ../tpcds-kit
+    # 1. Generate data
+    log "Generating data for $scale"
+    sh scripts/generate_data.sh -s $scale -p $path
+
+    # 2. Generate queries
+    log "Generating queries for $scale"
+    sh scripts/generate_queries.sh -s $scale -p $path
+
+    # 3. Modify queries
+    conda activate $conda_env || error "Unable to activate conda env '$conda_env' "
+    log "Modifying queries for $scale"
+    python scripts/modify_queires.py -queries_dir queries_${scale}gb -save_dir queries_${scale}gb
     
-    log "Generating queries for $scale_factor"
-    sh scripts/generate_queries.sh -s $scale_factor -p ../tpcds-kit
+    # 4. Benchmark queries
+    spark-submit scripts/run_queries.py -scale $scale
 
     # @todo: make adjustment for modified queries' path -> save in same locations (and save the old versions somewhere else)
-
-    log "Benchmarking for $scale_factor"
-    spark-submit --jars ~/Downloads/mysql-connector-java-8.0.26/mysql-connector-java-8.0.26.jar scripts/run_queries.py -scale $scale_factor
 }
 
 #--------------------
@@ -86,6 +119,6 @@ benchmark() {
 
 log "Starting Benchmarking Service"
 
-for i in "${benchmark_scales[@]}"; do benchmark "$i"; done
+benchmark $scale $path
 
 log "All done !!"
