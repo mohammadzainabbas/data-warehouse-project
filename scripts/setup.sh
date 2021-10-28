@@ -74,12 +74,14 @@ install_git() {
 }
 
 setup_tpcds() {
+
+    rm -rf ../tpcds-kit
     
-    git clone https://github.com/gregrahn/tpcds-kit.git ../tpcds-kit
+    git clone https://github.com/gregrahn/tpcds-kit.git ../tpcds-kit &> /dev/null
     
     cd ../tpcds-kit/tools > /dev/null
     
-    make OS=MACOS > /dev/null
+    make OS=MACOS &> /dev/null
 
     cd - > /dev/null
 }
