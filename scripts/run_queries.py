@@ -95,24 +95,30 @@ def run_benchmark(spark, queries_dir, result_dir, log_file, error_file):
                 log_error("[[ error ]]: Failed to execute '{}' query due to:\n{}".format( file, e ))
                 return None, None
     
-    for index, query in enumerate(queries):
-        log_message("="*50)
-        log_message("{} - Running benchmark for query: {}".format(index + 1, query))
+    try:
+        for index, query in enumerate(queries):
+            log_message("="*50)
+            log_message("{} - Running benchmark for query: {}".format(index + 1, query))
 
-        timings = list()
-        query_file = join(queries_dir, query)
-        query_no = int(digit_regex.findall(query)[0]) if len(digit_regex.findall(query)) else ""
+            timings = list()
+            query_file = join(queries_dir, query)
+            query_no = int(digit_regex.findall(query)[0]) if len(digit_regex.findall(query)) else ""
 
-        for run in list(range(0, total_runs)):
-            is_first = run == 0
-            executed_time, result = get_execute_query_time(query_file, is_first=is_first)
-            if executed_time is None and result is None: continue # in case of some error
-            elif result is not None: result.toPandas().to_csv(join(result_dir, "result_{}.csv".format(query_no)), sep="|") # save the result after 1st run
-            else: # add to benchmark's timings
-                timings.append(executed_time)
-                log_message("{} run took {} secs".format(run, executed_time))
-        timings_dict[query] = timings
-    return timings_dict
+            for run in list(range(0, total_runs)):
+                is_first = run == 0
+                executed_time, result = get_execute_query_time(query_file, is_first=is_first)
+                if executed_time is None and result is None: continue # in case of some error
+                elif result is not None:
+                    result.toPandas().head(100).to_csv(join(result_dir, "result_{}.csv".format(query_no)), sep="|") # save the result after 1st run
+                else: # add to benchmark's timings
+                    timings.append(executed_time)
+                    log_message("{} run took {} secs".format(run, executed_time))
+            timings_dict[query] = timings
+        return timings_dict
+    except Exception as e:
+        log_error("Something went wrong while running '{}':\n{}".format(query, e))
+        return timings_dict
+
 
 def save_benchmark(benchmark_dict, benchmark_file):
     '''
