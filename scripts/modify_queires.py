@@ -1,7 +1,5 @@
 from os import getcwd, listdir, makedirs
-from os.path import join, isfile, abspath, pardir, exists
-from time import time
-from shutil import copyfile
+from os.path import join, isfile, exists
 from argparse import ArgumentParser
 from sys import argv
 import re
