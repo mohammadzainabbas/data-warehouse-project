@@ -79,6 +79,8 @@ create_dir_if_not_exists $output_dir
 rm -rf $output_dir/* || error "Something went wrong while deleting"
 cd $path/tools > /dev/null
 
+log "Generating data for scale $scale Gb ..."
+
 start=$(date +%s)
 
 ./dsdgen -scale $scale -dir ../../$output_path -suffix ".csv" -delimiter "|" > /dev/null 2>> ${progname}_error.log || fatal_error "Unable to generate data via '$progname' for '$scale' Gb ..."
@@ -89,4 +91,4 @@ time_took=$((end-start))
 cd - > /dev/null
 total_queries=$(ls $output_dir | wc -l)
 log "⚐ → Generated data containing $total_queries '.csv' files for $scale Gb"
-log "⚑ Data Generation time for $scale Gb → $time_took seconds..."
+log "⚑ Data generation time for $scale Gb → $time_took seconds ..."
