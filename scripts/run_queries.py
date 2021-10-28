@@ -1,12 +1,10 @@
 from os import getcwd, listdir, makedirs
-from os.path import join, isfile, abspath, pardir, exists
+from os.path import join, isfile, exists
 from time import time
-from shutil import copyfile
-from sys import stdout, stderr, __stdout__, __stderr__
 from contextlib import redirect_stdout, redirect_stderr
 from pickle import load, dump, HIGHEST_PROTOCOL
 from argparse import ArgumentParser
-from sys import argv, stdout, stderr, __stdout__, __stderr__
+from sys import argv
 import pandas as pd
 import re
 from collections import OrderedDict
@@ -171,7 +169,6 @@ def main(scale):
 
     spark = SparkSession.builder.master("local[1]").appName("TPC DS").enableHiveSupport().getOrCreate()
     schema_dict = load_schema(schema_file)
-    print("Schema Dict: {}".format(schema_dict.keys()))
     load_data(spark, schema_dict, data_dir)
     benchmark_dict = run_benchmark(spark, queries_dir, result_dir, log_file, error_file)
     save_benchmark(benchmark_dict, benchmark_dir, scale)
