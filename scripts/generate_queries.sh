@@ -9,9 +9,8 @@
 # Enable exit on error
 set -e -u -o pipefail
 
-log () {
-    echo "[[ log ]] $1"
-}
+# import helper functions from 'utils.sh'
+source utils.sh
 
 #Function that shows usage for this script
 function usage()
@@ -69,33 +68,17 @@ while [[ "$#" -gt 0 ]]; do
     shift
 done
 
-# If path directory specified doesn't exist
-if [ ! -d $path ]; then
-    printf "\nError: Directory '$path' not found.\n"
-    exit 1
-fi
-
-# If path directory specified doesn't exist
-if [ ! -d $path/tools ]; then
-    printf "\nError: Directory '$path/tools' not found.\n"
-    exit 1
-fi
-
-# If $path/tools/dsqgen binary doesn't exist
-if [ ! -x $path/tools/dsqgen ]; then
-    echo "Error: Binary '$path/tools/dsqgen' not found."
-    exit 1
-fi
+# some sanity checks
+check_dir $path
+check_dir $path/tools
+check_bin $path/dsqgen
 
 parent_dir="$(basename $(pwd))"
 output_dir="queries_${scale}gb"
 output_path="$parent_dir/$output_dir"
 
 # If output_dir directory doesn't exist
-if [ ! -d $output_dir ]; then
-    echo "Directory '$output_dir' not found. Creating $output_dir now"
-    mkdir -p $output_dir
-fi
+create_dir_if_not_exists $output_dir
 
 # Delete everything in the output directory
 rm -rf $output_dir/*
@@ -103,18 +86,23 @@ rm -rf $output_dir/*
 # template file do we have
 template_files=$path/query_templates/templates.lst
 
-# If $path/query_templates/templates.lst file doesn't exist
-if [ ! -f $template_files ]; then
-    echo "Error: File '$template_files' not found."
-    exit 1
-fi
+# check if template file exists
+check_file $template_files
+
+log "Generating queries for scale $scale Gb ..."
+
+start=$(date +%s)
 
 for template in `less $template_files`
 do
     cd $path/tools > /dev/null
-    ./dsqgen -directory ../query_templates -template $template -scale $scale -dialect $dialect -output_dir ../../$output_path > /dev/null 2>> ${progname}_error.log
+    ./dsqgen -directory ../query_templates -template $template -scale $scale -dialect $dialect -output_dir ../../$output_path > /dev/null 2>> ${progname}_error_${scale}gb.log
     cd - > /dev/null
     query_no=$(echo $template | sed 's/[a-z]*//g' | sed 's/\.//g')
-    mv $output_dir/query_0.sql $output_dir/query_$query_no.sql
+    mv $output_dir/query_0.sql $output_dir/query_$query_no.sql || error "Unable to rename '$output_dir/query_0.sql' file to '$output_dir/query_$query_no.sql' for scale $scale Gb ..."
     log "⚐ → query_$query_no.sql done."
 done
+
+end=$(date +%s)
+time_took=$((end-start))
+log "⚑ Queries generation time for $scale Gb → $time_took seconds ..."
