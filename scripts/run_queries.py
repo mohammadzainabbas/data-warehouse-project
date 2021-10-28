@@ -120,7 +120,6 @@ def run_benchmark(spark, queries_dir, result_dir, log_file, error_file):
         log_error("Something went wrong while running '{}':\n{}".format(query, e))
         return timings_dict
 
-
 def save_benchmark(benchmark_dict, benchmark_dir, scale):
     '''
     Save the benchmark result as 'benchmark_timings_1gb.csv' (contains avg. timings) & 'benchmark_timings_1gb.pickle' (contains whole benchmark_dict)
@@ -175,7 +174,7 @@ def main(scale):
     print("Schema Dict: {}".format(schema_dict.keys()))
     load_data(spark, schema_dict, data_dir)
     benchmark_dict = run_benchmark(spark, queries_dir, result_dir, log_file, error_file)
-    save_benchmark(benchmark_dict, benchmark_dir)
+    save_benchmark(benchmark_dict, benchmark_dir, scale)
 
     spark.stop()
 
