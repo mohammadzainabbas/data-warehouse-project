@@ -9,9 +9,8 @@
 # Enable exit on error
 set -e -u -o pipefail
 
-log () {
-    echo "[[ log ]] $1"
-}
+# import helper functions from 'utils.sh'
+source utils.sh
 
 #Function that shows usage for this script
 function usage()
@@ -64,41 +63,25 @@ while [[ "$#" -gt 0 ]]; do
     shift
 done
 
-# If path directory specified doesn't exist
-if [ ! -d $path ]; then
-    printf "\nError: Directory '$path' not found.\n"
-    exit 1
-fi
-
-# If path directory specified doesn't exist
-if [ ! -d $path/tools ]; then
-    printf "\nError: Directory '$path/tools' not found.\n"
-    exit 1
-fi
-
-# If $path/tools/dsdgen binary doesn't exist
-if [ ! -x $path/tools/dsdgen ]; then
-    echo "Error: Binary '$path/tools/dsdgen' not found."
-    exit 1
-fi
+# some sanity checks
+check_dir $path
+check_dir $path/tools
+check_bin $path/dsdgen
 
 parent_dir="$(basename $(pwd))"
 output_dir="data_${scale}gb"
 output_path="$parent_dir/$output_dir"
 
 # If output_dir directory doesn't exist
-if [ ! -d $output_dir ]; then
-    log "Directory '$output_dir' not found. Creating '$output_dir' in '$parent_dir' ..."
-    mkdir -p $output_dir
-fi
+create_dir_if_not_exists $output_dir
 
 # Delete everything in the output directory
-rm -rf $output_dir/*
+rm -rf $output_dir/* || error "Something went wrong while deleting"
 cd $path/tools > /dev/null
 
 start=$(date +%s)
 
-./dsdgen -scale $scale -dir ../../$output_path -suffix ".csv" -delimiter "|" > /dev/null 2>> ${progname}_error.log
+./dsdgen -scale $scale -dir ../../$output_path -suffix ".csv" -delimiter "|" > /dev/null 2>> ${progname}_error.log || fatal_error "Unable to generate data via '$progname' for '$scale' Gb ..."
 
 end=$(date +%s)
 time_took=$((end-start))
@@ -106,4 +89,4 @@ time_took=$((end-start))
 cd - > /dev/null
 total_queries=$(ls $output_dir | wc -l)
 log "⚐ → Generated data containing $total_queries '.csv' files for $scale Gb"
-printf "\n⚑ Data Generation time for $scale Gb → $time_took seconds...\n\n"
+log "⚑ Data Generation time for $scale Gb → $time_took seconds..."
