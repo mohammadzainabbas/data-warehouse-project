@@ -74,15 +74,12 @@ install_git() {
 }
 
 setup_tpcds() {
-
     rm -rf ../tpcds-kit
-    
+    log "Cloning 'tpcds-kit' from github ..."
     git clone https://github.com/gregrahn/tpcds-kit.git ../tpcds-kit &> /dev/null
-    
     cd ../tpcds-kit/tools > /dev/null
-    
+    log "Running make OS=MACOS ..."
     make OS=MACOS &> /dev/null
-
     cd - > /dev/null
 }
 
@@ -97,7 +94,6 @@ install_apache_spark() {
 
 conda_init() {
     conda init --all || error "Unable to conda init ..."
-
     if [[ $SHELL == *"zsh"* ]]; then
         . ~/.zshrc
     elif [[ $SHELL == *"bash"* ]]; then
@@ -121,7 +117,6 @@ create_conda_env() {
     conda activate $env_name &> /dev/null || echo "" > /dev/null
 }
 
-
 log "Starting Setup Service"
 
 install_brew
@@ -130,6 +125,5 @@ setup_tpcds
 install_apache_spark
 install_conda
 create_conda_env
-
 
 log "All done !!"
