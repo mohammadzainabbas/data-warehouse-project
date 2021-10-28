@@ -88,7 +88,14 @@ benchmark() {
     conda activate $conda_env || error "Unable to activate conda env '$conda_env' "
     separator
     log "Modifying queries for $scale Gb"
+
+    start=$(date +%s)
+
     python scripts/modify_queires.py -queries_dir queries_${scale}gb -save_dir queries_${scale}gb
+
+    end=$(date +%s)
+    time_took=$((end-start))
+    log "⚑ Modifying queries' time for $scale Gb → $time_took seconds ..."
     
     # 4. Benchmark queries
     separator
