@@ -40,9 +40,6 @@ Examples:
 HEREDOC
 }
 
-# Clear the screen
-clear
-
 #Get program name
 progname=$(basename $0)
 
@@ -66,7 +63,7 @@ done
 # some sanity checks
 check_dir $path
 check_dir $path/tools
-check_bin $path/dsdgen
+check_bin $path/tools/dsdgen
 
 parent_dir="$(basename $(pwd))"
 output_dir="data_${scale}gb"

@@ -41,9 +41,6 @@ Examples:
 HEREDOC
 }
 
-# Clear the screen
-clear
-
 #Get program name
 progname=$(basename $0)
 
@@ -71,7 +68,7 @@ done
 # some sanity checks
 check_dir $path
 check_dir $path/tools
-check_bin $path/dsqgen
+check_bin $path/tools/dsqgen
 
 parent_dir="$(basename $(pwd))"
 output_dir="queries_${scale}gb"
@@ -100,7 +97,7 @@ do
     cd - > /dev/null
     query_no=$(echo $template | sed 's/[a-z]*//g' | sed 's/\.//g')
     mv $output_dir/query_0.sql $output_dir/query_$query_no.sql || error "Unable to rename '$output_dir/query_0.sql' file to '$output_dir/query_$query_no.sql' for scale $scale Gb ..."
-    log "⚐ → query_$query_no.sql done."
+    log "⚐ → Generated 'query_$query_no.sql'"
 done
 
 end=$(date +%s)
