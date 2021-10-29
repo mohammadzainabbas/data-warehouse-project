@@ -113,7 +113,7 @@ install_conda() {
 }
 
 create_conda_env() {
-    conda create -n $env_name python=3.9 pandas -y || error "Unable to create new env '$env_name' ..."
+    conda create -n $env_name python=3.8 pandas -y || error "Unable to create new env '$env_name' ..."
     conda activate $env_name &> /dev/null || echo "" > /dev/null
     pip install pyspark > /dev/null
 }
