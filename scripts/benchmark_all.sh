@@ -13,6 +13,6 @@ set -e -u -o pipefail
 source $(dirname $0)/utils.sh
 
 # scale factors to be used
-benchmark_scales=(1 5 10 25 50)
+benchmark_scales=(1 2 5 10)
 
 for i in "${benchmark_scales[@]}"; do sh benchmark.sh -s "$i"; done
