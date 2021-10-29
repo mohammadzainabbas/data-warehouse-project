@@ -15,4 +15,4 @@ source $(dirname $0)/utils.sh
 # scale factors to be used
 benchmark_scales=(1 2 5 10)
 
-for i in "${benchmark_scales[@]}"; do sh benchmark.sh -s "$i"; done
+for i in "${benchmark_scales[@]}"; do sh $(dirname $0)/benchmark.sh -s "$i"; done
