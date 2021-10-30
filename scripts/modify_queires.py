@@ -8,6 +8,12 @@ def fatal_error(text):
     print("\nError: {}\n".format(text))
     exit(0)
 
+def needs_to_split(query):
+
+    # checks whether to split the query or not
+    split_regex = re.compile(r"(;)\s*(with)", re.S)
+    return len(split_regex.findall(query))
+
 def modify_line(line):
 
     # +/- <Digit> days) -> INTERVAL <Digit> day)
@@ -17,22 +23,25 @@ def modify_line(line):
     # as "<some text>" -> as some_text
     as_regex = re.compile(r"(as)\s*(?P<p1>\")\s*(?P<text>[^]]+)\s*(?P<p2>\")", re.S)
     line = as_regex.sub(lambda m: m.group().replace(m.group("text"), "{}".format("_".join(m.group("text").split(" "))), 1).replace(m.group("p1"), "", 1).replace(m.group("p2"), "", 1), line)
-    
+
     return line
 
 def modify_query(src_file, dest_file):
 
+    def save_file(dest_file, text):
+        with open(dest_file, "w") as f:
+            f.write(text)
+
     with open(src_file, "rt") as file:
         lines = file.readlines()
         query = ""
-
+            
         for index, line in enumerate(lines):
             text = line.strip()
             if not len(text) and index == 0: continue
             query += "\n{}".format(modify_line(text))
         
-        with open(dest_file, "w") as f:
-            f.write(query)
+        save_file(dest_file=dest_file, text=query)
 
 def main(queries_dir, save_dir, debug=False):
     sql_queries = [x for x in listdir(queries_dir) if isfile(join(queries_dir, x)) and x.endswith(".sql")]
