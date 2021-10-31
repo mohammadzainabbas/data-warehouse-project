@@ -22,6 +22,9 @@ def modify_line(line):
     
     # as "<some text>" -> as some_text
     as_regex = re.compile(r"(as)\s*(?P<p1>\")\s*(?P<text>[^]]+)\s*(?P<p2>\")", re.S)
+    for m in re.finditer(as_regex, line): # not a good approach but it works
+        x, y = m.span()
+        line = "{}{}{}".format(line[0:x], line[x:y].replace("-", "_"), line[y:len(line)-1])
     line = as_regex.sub(lambda m: m.group().replace(m.group("text"), "{}".format("_".join(m.group("text").split(" "))), 1).replace(m.group("p1"), "", 1).replace(m.group("p2"), "", 1), line)
 
     return line
@@ -31,6 +34,9 @@ def modify_query(src_file, dest_file):
     def save_file(dest_file, text):
         with open(dest_file, "w") as f:
             f.write(text)
+
+    if needs_to_split(src_file):
+
 
     with open(src_file, "rt") as file:
         lines = file.readlines()
