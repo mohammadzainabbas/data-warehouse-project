@@ -9,11 +9,12 @@ def fatal_error(text):
     exit(0)
 
 def needs_to_split(query):
-
-    # checks whether to split the query or not
-    split_regex = re.compile(r"(;)\s*(with)", re.S)
-    return len(split_regex.findall(query))
-
+    with open(query, "rt") as f:
+        lines = f.read()
+        # checks whether to split the query or not -> returns the start and end of pattern
+        split_regex = re.compile(r"(;)\s*(with)", re.S)
+        return split_regex.search(lines).span() if split_regex.search(lines) else None
+    
 def modify_line(line):
 
     # +/- <Digit> days) -> INTERVAL <Digit> day)
@@ -24,20 +25,16 @@ def modify_line(line):
     as_regex = re.compile(r"(as)\s*(?P<p1>\")\s*(?P<text>[^]]+)\s*(?P<p2>\")", re.S)
     for m in re.finditer(as_regex, line): # not a good approach but it works
         x, y = m.span()
-        line = "{}{}{}".format(line[0:x], line[x:y].replace("-", "_"), line[y:len(line)-1])
+        line = "{}{}{}".format(line[0:x], line[x:y].replace("-", "_").replace(">", "gt_").replace("<", "lt_"), line[y:len(line)-1])
     line = as_regex.sub(lambda m: m.group().replace(m.group("text"), "{}".format("_".join(m.group("text").split(" "))), 1).replace(m.group("p1"), "", 1).replace(m.group("p2"), "", 1), line)
 
     return line
 
+def save_file(dest_file, text):
+    with open(dest_file, "w") as f:
+        f.write(text)
+
 def modify_query(src_file, dest_file):
-
-    def save_file(dest_file, text):
-        with open(dest_file, "w") as f:
-            f.write(text)
-
-    if needs_to_split(src_file):
-
-
     with open(src_file, "rt") as file:
         lines = file.readlines()
         query = ""
@@ -58,7 +55,21 @@ def main(queries_dir, save_dir, debug=False):
     for query in sql_queries:
         src_file = join(queries_dir, query)
         dest_file = join(save_dir, query)
-        modify_query(src_file=src_file, dest_file=dest_file)
+        span = needs_to_split(src_file)
+        if span:
+            start, end = span
+            with open(src_file, "rt") as file:
+                lines = file.read()
+                query_1 = "{};".format(lines[0:start])
+                query_2 = "with {}".format(lines[end:len(lines) - 1])
+                file_name, ext = dest_file.split(".")
+                query_1_file, query_2_file = "{}_1.{}".format(file_name, ext), "{}_2.{}".format(file_name, ext) 
+                save_file(query_1_file, query_1)
+                save_file(query_2_file, query_2)
+                modify_query(src_file=query_1_file, dest_file=query_1_file)
+                modify_query(src_file=query_2_file, dest_file=query_2_file)
+        else:
+            modify_query(src_file=src_file, dest_file=dest_file)
 
         if debug:
             with open(join(getcwd(), 'compare_files.sh'), 'a') as f:
