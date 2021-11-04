@@ -13,6 +13,7 @@
   * [PySpark](#pyspark-setup)
   * [TPC-DS](#tpc-ds-setup)
 - [Benchmark](#benchmark)
+- [Result](#result)
 
 ---
 
@@ -52,6 +53,8 @@ cd data-warehouse-project && sh scripts/setup.sh
 ```
 
 After running the above mentioned commands, your file structure should look something like this. (you need to go to parent directory first `cd ..`)
+
+<a id="file-structure" />
 
 ```
 ├── data-warehouse-project
@@ -126,9 +129,7 @@ echo "export PYSPARK_DRIVER_PYTHON_OPTS=''" >> ~/.zshrc
 
 For Linux users, you need to manually install _tpcds-kit_ from [gregrahn/tpcds-kit](https://github.com/gregrahn/tpcds-kit)
 
-Make sure you have the same file structure as mentioned above.
-
-- [Benchmark](#benchmark)
+Make sure you have the same file structure as [mentioned above](#file-structure)
 
 <a id="benchmark" />
 
@@ -151,4 +152,14 @@ If you want to run for multiple benchmark scales
 sh scripts/benchmark_all.sh
 ```
 
-This will run for all the scales
+This will run for all the scales.
+
+<a id="result" />
+
+### Result
+
+The benchmarking results can be found under `benchmark` folder. For example, when you run `sh benchmark.sh -scale 1` (_i.e: benchmarking for 1 GB scale_), you will find two files in `benchmark` directory:
+
+1. `benchmark_timings_1gb.csv` contains the average time (_in seconds_) for all queries.
+2. `benchmark_timings_1gb.pickle` contains all the timings for each query (usually 5 per query).
+
