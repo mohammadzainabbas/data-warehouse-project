@@ -1,9 +1,10 @@
-#!/bin/bash
+#! /bin/bash
 #====================================================================================
 # Author: Mohammad Zain Abbas
 # Date: 28th Oct, 2021
 #====================================================================================
-# This file contains helper methods. If you want to use them in your script, simply add '. utils.sh' or 'source utils.sh'
+# This file contains helper methods. 
+# If you want to use them in your script, simply add '. utils.sh' or 'source utils.sh'
 #====================================================================================
 
 log () {
@@ -26,7 +27,9 @@ check_dir() {
 }
 
 check_bin() {
-    if [ ! -x $1 ]; then
+    if which $1 >/dev/null; then
+        log "Binary '$1' found."
+    else
         fatal_error "Binary '$1' not found."
     fi
 }
